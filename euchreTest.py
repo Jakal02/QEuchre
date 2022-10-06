@@ -7,7 +7,7 @@ from rlcard.envs.euchre import EuchreEnv
 from rlcard.models.euchre_rule_agent import EuchreRuleAgent
 from rlcard.agents.human_agents.euchre_human_agent import EuchreHumanAgent
 
-a = EuchreHumanAgent()
+a = EuchreRuleAgent()
 b = EuchreRuleAgent()
 c = EuchreRuleAgent()
 d = EuchreRuleAgent()
@@ -32,5 +32,6 @@ config = {
 test = EuchreEnv(config)
 test.set_agents(agents)
 trajectories,payoffs = test.run(is_training=False)
+t = trajectories[0]
 
 print(payoffs)

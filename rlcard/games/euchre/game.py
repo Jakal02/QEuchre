@@ -1,7 +1,7 @@
 import random
 from copy import deepcopy
 
-from utils import cards2list, is_left, is_right, ACTION_SPACE
+from rlcard.games.euchre.utils import cards2list, is_left, is_right, ACTION_SPACE
 
 from rlcard.games.euchre import Dealer
 from rlcard.games.euchre import Player
@@ -183,7 +183,7 @@ class EuchreGame(object):
             return follow
         return [card.get_index() for card in hand]
 
-    def get_player_num(self):
+    def get_num_players(self):
         return self.num_players
 
     def get_payoffs(self):
@@ -200,6 +200,9 @@ class EuchreGame(object):
     def is_over(self):
         return self.game_over
 
+    def get_player_id(self):
+        return self.current_player
+
     @staticmethod
-    def get_action_num():
+    def get_num_actions():
         return 54

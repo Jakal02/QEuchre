@@ -1,6 +1,6 @@
 import random
 
-from utils import init_euchre_deck
+from rlcard.games.euchre.utils import init_euchre_deck
 
 
 class EuchreDealer(object):

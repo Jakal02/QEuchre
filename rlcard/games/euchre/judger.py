@@ -1,4 +1,4 @@
-from utils import is_left, is_right, NON_TRUMP
+from rlcard.games.euchre.utils import is_left, is_right, NON_TRUMP
 
 class EuchreJudger(object):
 
