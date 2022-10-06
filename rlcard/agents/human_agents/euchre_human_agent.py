@@ -21,7 +21,7 @@ class EuchreHumanAgent(object):
         
         # If you want to actually play as a human, uncomment the block comment
         else:
-            if state['flipped'] is not None:
+            if np.sum(state['flipped_choice']) == 0:
                 print("Center Card:",state['flipped'])
             print("Your Hand:",state['hand'])
         
@@ -34,7 +34,7 @@ class EuchreHumanAgent(object):
             print("Center Cards:",played)
         
         #print(f"I am player #{state['current_actor']}")
-        print(legal)
+        print("Your Legal Actions:",legal)
         act = input("Select Legal Action")
         while act not in legal:
             act = input("Select Legal Action")

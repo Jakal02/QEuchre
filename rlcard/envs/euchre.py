@@ -1,6 +1,7 @@
 from rlcard.envs import Env
 from rlcard.games.euchre import Game
 from rlcard.games.euchre.utils import ACTION_SPACE, ACTION_LIST
+from collections import OrderedDict
 import numpy as np
 
 class EuchreEnv(Env):
@@ -10,18 +11,23 @@ class EuchreEnv(Env):
         self.name = "euchre"
 
         self.actions = ACTION_LIST
-        self.state_shape = [len(self.actions)]
+        # Just the way it is... TODO: Figure out a way to connect this to extract_state somehow
+        # TODO: Fix bugs in _extract_state. Size changes
+        self.state_shape = [148]
         super().__init__(config)
     
 
     def _extract_state(self, state):
         def vec(s):
+            # Return 'list' object
             suit = {"C":[1,0,0,0], "D":[0,1,0,0], "H":[0,0,1,0], "S":[0,0,0,1]}
             rank = {"9":9, "T":10, "J":11, "Q":12, "K":13, "A":14}
             if len(s)==1:
-                return np.asarray(suit[s[0]] )
+                return suit[s[0]]
             else:
-                return np.array( suit[s[0]] + [rank[s[1]]] )
+                temp_list = suit[s[0]]
+                temp_list.append(rank[s[1]])
+                return temp_list
 
         state['legal_actions'] = self._get_legal_actions()
         state['raw_legal_actions'] = self.game.get_legal_actions()
@@ -29,54 +35,57 @@ class EuchreEnv(Env):
         '''
         structure of obs 
         suit = 4-1 Binary Feature | rank = 1 numerical Feature  
-        1. Dealer pos relative to Agent:        4-1 Binary Feature
-        2. suit of trump:                       4-1 Binary Feature
-        3. Trump caller pos relative to Agent   4-1 Binary Feature
-        4. Flipped Card                         4-1 Binary Feature and 1 numerical feature
-        5. What happened to the flipped card    2-1 Binary Feature
-            Avaliable = [0,0]
-        6. The led suit for the hand            4-1 Binary Feature
-        7. Center Cards                     4x  4-1 Binary Feature and 1 numerical feature
-        7. Agents Hand                      6x  4-1 Binary Feature and 1 numerical feature
-        8. Partners Hand                    5x  4-1 Binary Feature and 1 numerical feature
-        9. Left Opponents Hand              5x  4-1 Binary Feature and 1 numerical feature
-        10. Right Opponents Hand            5x  4-1 Binary Feature and 1 numerical feature
+        1. Dealer pos relative to Agent:        4-1 Binary Feature                          | 4
+        2. suit of trump:                       4-1 Binary Feature                          | 4
+        3. Trump caller pos relative to Agent   4-1 Binary Feature                          | 4
+        4. Flipped Card                         4-1 Binary Feature and 1 numerical feature  | 5
+        5. What happened to the flipped card    2-1 Binary Feature                          | 2
+            Avaliable = [0,0]                                                               |
+        6. The led suit for the hand            4-1 Binary Feature                          | 4
+        7. Center Cards                     4x  4-1 Binary Feature and 1 numerical feature  | 20
+        7. Agents Hand                      6x  4-1 Binary Feature and 1 numerical feature  | 30
+        8. Partners Hand                    5x  4-1 Binary Feature and 1 numerical feature  | 25
+        9. Left Opponents Hand              5x  4-1 Binary Feature and 1 numerical feature  | 25
+        10. Right Opponents Hand            5x  4-1 Binary Feature and 1 numerical feature  | 25
+                                                                                    Total:    148
         '''
 
         obs = []
         curr_player_num = state['current_actor']
         # Save which player relative to you is the dealer
         '''1'''
-        obs += [self._orderShuffler(curr_player_num,state['dealer_actor'])]
+        obs.append( self._orderShuffler(curr_player_num,state['dealer_actor']) )
 
         '''2 and 3'''
         if state['trump'] is not None:
-            obs += [ vec(state['trump']) ]
-            obs += [self._orderShuffler(curr_player_num,state['calling_actor'])]
+            obs.append( vec(state['trump']) )
+            obs.append( self._orderShuffler(curr_player_num,state['calling_actor']) )
         else: # No Trump called
-            obs += [ np.zeros(4) ]
-            obs += [ np.zeros(4) ]
+            obs.append( [0,0,0,0] )
+            obs.append( [0,0,0,0] )
         
         '''4'''
-        obs += [ vec(state['flipped']) ]
+        obs.append( vec(state['flipped']) )
         '''5'''
-        obs += [np.array(state['flipped_choice'])]
+        obs.append( state['flipped_choice'].tolist() )
         '''6'''
         if state['lead_suit'] is not None:
-            obs += [ vec(state['lead_suit']) ]
+            obs.append( vec(state['lead_suit']) )
         else:
-            obs += [ np.asarray([0,0,0,0]) ]
+            obs.append( [0,0,0,0] )
         
         '''7'''
-        # TODO: Fix this. Done?
-        obs += [ vec(e.get_index()) for e in state['center'] ]
-        obs += [ np.zeros(5*(4-len(state['center'])))-1 ]
-
+        # TODO: Fix this. Done? Count seems right 20 count
+        for e in state['center']:
+            obs.append(vec(e.get_index()))
+        no_cards = np.zeros(5*(4-len(state['center'])))-1
+        obs.append( no_cards.tolist() )
         '''8'''
-        # TODO Fix this. Done?
-        obs += [ vec(e) for e in state['hand'] ]
-        obs += [ np.zeros(5*(6-len(state['hand'])))-1 ]
-
+        # TODO: Fix this. Done? Count seems right 30 count
+        for e in state['hand']:
+            obs.append(vec(e))
+        no_cards = np.zeros(5*(6-len(state['hand'])))-1
+        obs.append( no_cards.tolist() )
         '''
         Need to build 3 hands for each other player
         Note, their hands will grow as mine shrinks
@@ -85,8 +94,10 @@ class EuchreEnv(Env):
         '''9 10 11'''
         for i in range(1,4):
             rel_player_num = (i - curr_player_num + 4) % 4
-            obs += [ vec(e) for e in state['played'][rel_player_num] ]
-            obs += [ np.zeros(5*(5-len(state['center'])))-1 ]
+            for e in state['played'][rel_player_num]:
+                obs.append(vec(e))
+            no_cards = np.zeros(5*(5-len(state['played'][rel_player_num])))-1
+            obs.append( no_cards.tolist() )
 
         state['obs'] = np.hstack(obs)
         return state
@@ -111,7 +122,7 @@ class EuchreEnv(Env):
 
             Also, it's important to remember who was the dealer. As the dealer has an information advantage.
             '''
-            bin_encode = np.zeros(4)
+            bin_encode = [0,0,0,0]
             adjusted_num = (num - curr_player_num + 4) % 4
             bin_encode[adjusted_num] = 1
             return bin_encode
@@ -121,8 +132,8 @@ class EuchreEnv(Env):
 
     def _get_legal_actions(self):
         legal_actions = self.game.get_legal_actions()
-        legal_ids = [ACTION_SPACE[action] for action in legal_actions]
-        return legal_ids
+        legal_ids = {ACTION_SPACE[action]: None for action in legal_actions}
+        return OrderedDict(legal_ids)
 
     def get_payoffs(self):
         return self.game.get_payoffs()
