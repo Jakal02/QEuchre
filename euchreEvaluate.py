@@ -70,9 +70,9 @@ if __name__ == '__main__':
         '--models',
         nargs='*',
         default=[
-            'experiments/euchre_dqn_result/model.pth',
+            'experiments/euchre_dqn_v4_result/model.pth',
             'random',
-            'random',
+            'experiments/euchre_dqn_v4_result/model.pth',
             'random'
         ],
     )

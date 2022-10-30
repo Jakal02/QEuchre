@@ -4,13 +4,17 @@ this file is for you
 """
 
 from rlcard.envs.euchre import EuchreEnv
-from rlcard.models.euchre_rule_agent import EuchreRuleAgent
+from rlcard.models.euchre_rule_models import EuchreSimpleRuleAgent
 from rlcard.agents.human_agents.euchre_human_agent import EuchreHumanAgent
-
-a = EuchreRuleAgent()
-b = EuchreRuleAgent()
-c = EuchreRuleAgent()
-d = EuchreRuleAgent()
+import torch
+model_path = 'experiments/euchre_dqn_v4_result/model.pth'
+device = torch.device("cpu")
+a = EuchreHumanAgent()
+b = torch.load(model_path, map_location=device)
+b.set_device(device)
+c = EuchreSimpleRuleAgent()
+d = torch.load(model_path, map_location=device)
+d.set_device(device)
 
 '''
 This order determines the internal order of players but this

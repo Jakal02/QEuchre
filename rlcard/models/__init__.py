@@ -29,3 +29,7 @@ register(
 register(
     model_id='gin-rummy-novice-rule',
     entry_point='rlcard.models.gin_rummy_rule_models:GinRummyNoviceRuleModel')
+
+register(
+    model_id='euchre-simple-rule',
+    entry_point='rlcard.models.euchre_rule_models:EuchreSimpleRuleModel')

@@ -1,5 +1,5 @@
 import random
-from copy import deepcopy
+from copy import copy
 
 from rlcard.games.euchre.utils import cards2list, is_left, is_right, ACTION_SPACE
 
@@ -32,8 +32,8 @@ class EuchreGame(object):
         self.calling_player = -1
         # Options: {Avaliable=0,TurnedDown=1,PickedUp=2}
         self.flipped_choice = np.zeros(2)
-        self.history = []
-        self.center = []
+        self.history = [] # populate with game states
+        self.center = [] 
         self.order = []
         self.score = {i:0 for i in range(self.num_players)}
         self.game_over = False
@@ -70,36 +70,32 @@ class EuchreGame(object):
         return state
 
     def step(self, action):
+        if self.allow_step_back:
+            self._add_to_history()
+
         if action == 'pick':
             self._perform_pick_action()
-            state = self.get_state(self.current_player)
-            return state, self.current_player
     
-        if action == 'pass':
+        elif action == 'pass':
             self._perform_pass()
-            state = self.get_state(self.current_player)
-            return state, self.current_player
 
-        if action.startswith('call'):
+        elif action.startswith('call'):
             suit = action.split('-')[1]
             self._perform_call(suit)
-            state = self.get_state(self.current_player)
-            return state, self.current_player
 
-        if action.startswith('discard'):
+        elif action.startswith('discard'):
             card = action.split('-')[1]
             self._perform_discard(card)
-            state = self.get_state(self.current_player)
-            return state, self.current_player
 
-        self._play_card(action)
+        else:
+            self._play_card(action)
 
-        if len(self.center) == 4:
-            self._end_trick()
-            if len(self.players[self.current_player].hand) == 0:
-                self.winner, self.points = self.judge.judge_hand(self)
-                self.game_over = True
-
+            if len(self.center) == 4:
+                self._end_trick()
+                if len(self.players[self.current_player].hand) == 0:
+                    self.winner, self.points = self.judge.judge_hand(self)
+                    self.game_over = True
+        
         state = self.get_state(self.current_player)
         return state, self.current_player
 
@@ -112,7 +108,7 @@ class EuchreGame(object):
         self.current_player = self.dealer_player_id
 
     def _increment_player(self, player_id):
-        return (player_id+ 1) % self.num_players
+        return (player_id + 1) % self.num_players
 
     def _perform_discard(self, card):
         player = self.players[self.current_player]
@@ -202,6 +198,22 @@ class EuchreGame(object):
 
     def get_player_id(self):
         return self.current_player
+
+    def _add_to_history(self):
+        '''
+        - All Players Hands
+        - What card was in the center
+        - The avaliability of the center card
+        - What is trump
+        - Who is the dealer
+        - Who is the current player
+        - What cards are in the center
+        - What card was lead
+        - What team has won the last tricks
+        - Is the game over
+        '''
+
+        return
 
     @staticmethod
     def get_num_actions():

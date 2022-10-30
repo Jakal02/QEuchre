@@ -11,8 +11,6 @@ class EuchreEnv(Env):
         self.name = "euchre"
 
         self.actions = ACTION_LIST
-        # Just the way it is... TODO: Figure out a way to connect this to extract_state somehow
-        # TODO: Fix bugs in _extract_state. Size changes
         self.state_shape = [148]
         super().__init__(config)
     
@@ -24,10 +22,9 @@ class EuchreEnv(Env):
             rank = {"9":9, "T":10, "J":11, "Q":12, "K":13, "A":14}
             if len(s)==1:
                 return suit[s[0]]
-            else:
-                temp_list = suit[s[0]]
-                temp_list.append(rank[s[1]])
-                return temp_list
+            temp_list = suit[s[0]]
+            temp_list.append(rank[s[1]])
+            return temp_list
 
         state['legal_actions'] = self._get_legal_actions()
         state['raw_legal_actions'] = self.game.get_legal_actions()

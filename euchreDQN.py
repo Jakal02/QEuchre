@@ -7,6 +7,7 @@ import torch
 
 from rlcard.envs import make
 from rlcard.agents import RandomAgent
+from rlcard.models.euchre_rule_models import EuchreSimpleRuleAgent
 from rlcard.utils import (
     get_device,
     set_seed,
@@ -50,9 +51,18 @@ def train(args):
             q_mlp_layers=[64,64],
             device=device,
         )
+    import torch
     agents = [agent]
+    model_path = 'experiments/euchre_dqn_v4_result/model.pth'
     for _ in range(1, env.num_players):
-        agents.append(RandomAgent(num_actions=env.num_actions))
+        # Against Rule Agents
+        #agents.append(RandomAgent(num_actions=env.num_actions))
+        agents.append(EuchreSimpleRuleAgent())
+        # Against RL Agents
+        #new_agent = torch.load(model_path, map_location=device)
+        #new_agent.set_device(device) # RL Agent
+        #agents.append(new_agent)
+    
     env.set_agents(agents)
 
     # Start training
@@ -74,7 +84,7 @@ def train(args):
             for ts in trajectories[0]:
                 agent.feed(ts)
 
-            # Evaluate the performance. Play with random agents.
+            # Evaluate the performance. Play with simple rule agents
             if episode % args.evaluate_every == 0:
                 logger.log_performance(
                     env.timestep,
@@ -107,7 +117,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--algorithm',
         type=str,
-        default='dqn',
+        default='nfsp',
         choices=[
             'dqn',
             'nfsp',
@@ -126,7 +136,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--num_episodes',
         type=int,
-        default=5000,
+        default=200000,
     )
     parser.add_argument(
         '--num_eval_games',
@@ -136,12 +146,12 @@ if __name__ == '__main__':
     parser.add_argument(
         '--evaluate_every',
         type=int,
-        default=100,
+        default=1000,
     )
     parser.add_argument(
         '--log_dir',
         type=str,
-        default='experiments/euchre_dqn_result/',
+        default='experiments/euchre_nfsp_v1_result/',
     )
 
     args = parser.parse_args()
