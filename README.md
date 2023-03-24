@@ -1,4 +1,4 @@
-# QEuchre: RL code for palying euchre
+# QEuchre: RL code for playing euchre
 
 Forked the repository for RLCard.
 We've created a better state-space representation than that done by [Eli Pugh](https://web.stanford.edu/class/aa228/reports/2020/final165.pdf)
